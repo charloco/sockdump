@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from __future__ import print_function
 import sys
 import time
 import math
@@ -136,7 +137,7 @@ def build_filter(sock_path):
 
     filter = 'if ('
     filter += ' && '.join(
-        '*(path+%d) == %d' % (i, sock_path[i]) for i in range(n))
+        '*(path+%d) == %d' % (i, ord(sock_path[i])) for i in range(n))
     filter += ') match = 1;'
 
     return filter
@@ -187,7 +188,8 @@ def string_output(cpu, event, size):
     print_header(packet, data)
     if packet.flags & SS_PACKET_F_ERR:
         print('error')
-    print(str(data.raw, encoding='ascii', errors='ignore'), end='', flush=True)
+    #print(str(data.raw, encoding='ascii', errors='ignore'), end='', flush=True)
+    print(str(data.raw))
 
 def ascii(c):
     if c < 32 or c > 126:
@@ -259,7 +261,7 @@ def main(args):
     npages = 2 ** math.ceil(math.log(npages, 2))
 
     output_fn = outputs[args.format]
-    b['events'].open_perf_buffer(output_fn, page_cnt=npages)
+    b['events'].open_perf_buffer(output_fn, page_cnt=int(npages))
 
     signal.signal(signal.SIGINT, sig_handler)
     signal.signal(signal.SIGTERM, sig_handler)
@@ -288,7 +290,7 @@ if __name__ == '__main__':
         '--buffer-size', type=int, default=SS_EVENT_BUFFER_SIZE,
         help='perf event buffer size')
     parser.add_argument(
-        '--format', choices=outputs.keys(), default='hex',
+        '--format', choices=outputs.keys(), default='string',
         help='output format')
     parser.add_argument(
         '--output', default='/dev/stdout',
